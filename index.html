@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SortVerse Infinity Match - 时空邮局</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <header id="game-header">
+            <div class="title-bar">
+                <h1 class="game-title">时空邮局</h1>
+                <p class="subtitle">记忆碎片分拣员</p>
+            </div>
+            <div class="game-stats">
+                <div class="stat">
+                    <span class="label">关卡</span>
+                    <span id="level" class="value">1</span>
+                </div>
+                <div class="stat">
+                    <span class="label">分数</span>
+                    <span id="score" class="value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="label">目标</span>
+                    <span id="target" class="value">3/5</span>
+                </div>
+            </div>
+        </header>
+
+        <div id="menu-screen" class="screen active">
+            <div class="menu-container">
+                <div class="logo">
+                    <div class="stamp">时空邮局</div>
+                </div>
+                <h2 class="menu-title">欢迎，分拣员</h2>
+                <p class="menu-desc">
+                    在时空邮局中，您将负责整理来自不同时代、不同人物寄出的记忆包裹。<br>
+                    每个包裹是一个模糊的片段，您需要将关联的碎片拼合成完整的记忆。
+                </p>
+                
+                <div class="mode-selection">
+                    <h3>选择游戏模式</h3>
+                    <div class="mode-buttons">
+                        <button class="mode-btn active" data-mode="memory">
+                            <span class="mode-icon">📮</span>
+                            <span class="mode-name">记忆碎片</span>
+                            <span class="mode-desc">将关联的碎片拼成完整记忆</span>
+                        </button>
+                        <button class="mode-btn" data-mode="classic">
+                            <span class="mode-icon">💎</span>
+                            <span class="mode-name">经典三消</span>
+                            <span class="mode-desc">三个相同物品即可消除</span>
+                        </button>
+                        <button class="mode-btn" data-mode="logic">
+                            <span class="mode-icon">🧩</span>
+                            <span class="mode-name">逻辑关联</span>
+                            <span class="mode-desc">找出逻辑上相关的物品组</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="start-btn" class="primary-btn">开始分拣</button>
+                
+                <div class="instructions">
+                    <h4>操作说明</h4>
+                    <ul>
+                        <li>🖱️ 拖拽物品进行移动和堆叠</li>
+                        <li>🔄 双击物品进行旋转</li>
+                        <li>✨ 将关联的物品放在一起进行匹配</li>
+                        <li>📍 点击放置引力点影响物品流动</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div id="conveyor-belt" class="conveyor-belt">
+                <div class="conveyor-inner"></div>
+            </div>
+            
+            <div id="physics-area" class="physics-area">
+                <canvas id="game-canvas"></canvas>
+                <div id="story-overlay" class="story-overlay hidden">
+                    <div class="story-content">
+                        <h3 id="story-title"></h3>
+                        <p id="story-text"></p>
+                        <button id="story-close" class="secondary-btn">继续分拣</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="match-indicator" class="match-indicator">
+                <div class="selected-items">
+                    <span class="label">已选择：</span>
+                    <div id="selected-list" class="selected-list"></div>
+                </div>
+                <button id="confirm-match" class="primary-btn small" disabled>确认匹配</button>
+                <button id="clear-selection" class="secondary-btn small">清除</button>
+            </div>
+
+            <div class="game-controls">
+                <button id="hint-btn" class="control-btn" title="提示">💡</button>
+                <button id="pause-btn" class="control-btn" title="暂停">⏸️</button>
+                <button id="menu-btn" class="control-btn" title="菜单">🏠</button>
+            </div>
+        </div>
+
+        <div id="level-complete" class="screen hidden">
+            <div class="level-complete-container">
+                <div class="stamp success">记忆已归档</div>
+                <h2 class="complete-title">关卡完成！</h2>
+                <div class="complete-stats">
+                    <div class="complete-stat">
+                        <span class="label">完成记忆</span>
+                        <span id="complete-memories" class="value">5</span>
+                    </div>
+                    <div class="complete-stat">
+                        <span class="label">获得分数</span>
+                        <span id="complete-score" class="value">1250</span>
+                    </div>
+                    <div class="complete-stat">
+                        <span class="label">用时</span>
+                        <span id="complete-time" class="value">2:34</span>
+                    </div>
+                </div>
+                <div class="complete-buttons">
+                    <button id="next-level-btn" class="primary-btn">下一关卡</button>
+                    <button id="back-to-menu-btn" class="secondary-btn">返回菜单</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="physics-engine.js"></script>
+    <script src="match-system.js"></script>
+    <script src="item-generator.js"></script>
+    <script src="story-system.js"></script>
+    <script src="ui-manager.js"></script>
+    <script src="game-manager.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
