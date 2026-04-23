@@ -25,7 +25,6 @@ body {
     background-color: var(--parchment-bg);
     color: var(--ink-brown);
     min-height: 100vh;
-    overflow: hidden;
     background-image: 
         url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
 }
@@ -119,8 +118,10 @@ body {
 }
 
 #menu-screen {
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+    overflow-y: auto;
+    padding: 100px 20px 40px 20px;
     background: linear-gradient(180deg, var(--parchment-bg) 0%, var(--parchment-dark) 100%);
 }
 
