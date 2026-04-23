@@ -48,60 +48,69 @@ class GameManager {
     }
     
     setupCanvasEvents() {
-        let lastClickTime = 0;
-        let clickedBodyId = null;
-        
-        this.canvas.addEventListener('mousedown', (e) => {
-            lastClickTime = Date.now();
-            const pos = this.getMousePos(e);
+        const handleClick = (e) => {
+            if (!this.isRunning || this.isPaused) return;
+            
+            const pos = this.getEventPos(e);
             const body = this.getBodyAtPosition(pos.x, pos.y);
             
             if (body) {
-                clickedBodyId = body.id;
-            }
-        });
-        
-        this.canvas.addEventListener('mouseup', (e) => {
-            const now = Date.now();
-            const pos = this.getMousePos(e);
-            
-            if (now - lastClickTime < 300) {
-                const body = this.getBodyAtPosition(pos.x, pos.y);
-                
-                if (body) {
-                    if (clickedBodyId === body.id) {
-                        this.toggleSelect(body.id);
-                    }
-                } else {
+                this.toggleSelect(body.id);
+            } else {
+                if (this.physics) {
                     this.physics.addGravityPoint(pos.x, pos.y);
                 }
             }
-            
-            clickedBodyId = null;
-        });
+        };
+        
+        this.canvas.addEventListener('click', handleClick);
         
         this.canvas.addEventListener('dblclick', (e) => {
-            const pos = this.getMousePos(e);
+            if (!this.isRunning || this.isPaused) return;
+            
+            const pos = this.getEventPos(e);
             const body = this.getBodyAtPosition(pos.x, pos.y);
             
-            if (body) {
+            if (body && this.physics) {
                 this.physics.rotateBody(body.id);
             }
         });
         
         this.canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            const pos = this.getMousePos(e);
-            this.physics.addGravityPoint(pos.x, pos.y, 0.02, 200);
+            if (!this.isRunning || this.isPaused) return;
+            
+            const pos = this.getEventPos(e);
+            if (this.physics) {
+                this.physics.addGravityPoint(pos.x, pos.y, 0.02, 200);
+            }
         });
+        
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+    }
+    
+    getEventPos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        let clientX, clientY;
+        
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
     }
     
     getMousePos(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        };
+        return this.getEventPos(e);
     }
     
     getBodyAtPosition(x, y) {
@@ -178,18 +187,28 @@ class GameManager {
             this.itemGenerator.setLevel(levelConfig);
         }
         
-        this.physics = new PhysicsEngine(this.canvas);
-        this.physics.start();
-        
         this.ui.showScreen('game');
-        this.updateStatsUI();
         
-        this.isRunning = true;
-        this.isPaused = false;
-        
-        this.spawnInitialItems();
-        this.startSpawning();
-        this.startGameLoop();
+        setTimeout(() => {
+            this.resizeCanvas();
+            
+            if (this.physics) {
+                this.physics.stop();
+                this.physics.clear();
+            }
+            
+            this.physics = new PhysicsEngine(this.canvas);
+            this.physics.start();
+            
+            this.updateStatsUI();
+            
+            this.isRunning = true;
+            this.isPaused = false;
+            
+            this.spawnInitialItems();
+            this.startSpawning();
+            this.startGameLoop();
+        }, 100);
     }
     
     spawnInitialItems() {

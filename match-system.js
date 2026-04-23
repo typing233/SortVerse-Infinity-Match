@@ -151,11 +151,58 @@ class MatchSystem {
     }
     
     findHint(bodies, levelConfig) {
-        if (this.mode === 'memory' || this.mode === 'logic') {
+        if (this.mode === 'memory') {
             return this.findMemoryHint(bodies, levelConfig);
+        } else if (this.mode === 'logic') {
+            return this.findLogicHint(bodies);
         } else {
             return this.findClassicHint(bodies);
         }
+    }
+    
+    findLogicHint(bodies) {
+        const groupMap = {};
+        
+        bodies.forEach(body => {
+            const data = body.data;
+            if (data.logicGroupId) {
+                if (!groupMap[data.logicGroupId]) {
+                    groupMap[data.logicGroupId] = [];
+                }
+                groupMap[data.logicGroupId].push(body);
+            }
+        });
+        
+        for (const groupId in groupMap) {
+            const bodiesInGroup = groupMap[groupId];
+            const group = CONFIG.logicGroups.find(g => g.id === groupId);
+            if (!group) continue;
+            
+            const itemIdsInScene = bodiesInGroup.map(b => b.data.logicItemId);
+            const uniqueItems = [...new Set(itemIdsInScene)];
+            
+            if (uniqueItems.length >= this.getMatchCount()) {
+                const hintBodies = [];
+                const usedItems = [];
+                
+                for (const body of bodiesInGroup) {
+                    if (!usedItems.includes(body.data.logicItemId)) {
+                        hintBodies.push(body);
+                        usedItems.push(body.data.logicItemId);
+                        if (hintBodies.length >= this.getMatchCount()) break;
+                    }
+                }
+                
+                return {
+                    type: 'logic',
+                    logicGroup: group,
+                    name: group.name,
+                    items: hintBodies
+                };
+            }
+        }
+        
+        return null;
     }
     
     findMemoryHint(bodies, levelConfig) {
@@ -195,6 +242,7 @@ class MatchSystem {
                 return {
                     type: 'memory',
                     memorySet: set,
+                    name: set.name,
                     items: hintBodies
                 };
             }
