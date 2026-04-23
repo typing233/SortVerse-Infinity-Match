@@ -116,9 +116,9 @@ class UIManager {
     }
     
     showScreen(screenName) {
-        this.elements.menuScreen.classList.remove('active');
-        this.elements.gameScreen.classList.remove('active');
-        this.elements.levelCompleteScreen.classList.remove('active');
+        this.elements.menuScreen.classList.remove('active', 'hidden');
+        this.elements.gameScreen.classList.remove('active', 'hidden');
+        this.elements.levelCompleteScreen.classList.remove('active', 'hidden');
         
         switch (screenName) {
             case 'menu':
