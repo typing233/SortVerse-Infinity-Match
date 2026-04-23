@@ -14,6 +14,36 @@ const CONFIG = {
         hintsAvailable: 3
     },
     
+    timeRewind: {
+        maxEnergy: 100,
+        energyPerStep: 20,
+        maxRewindSteps: 5,
+        scorePenaltyPerStep: 50,
+        fragmentPenaltyPerStep: 1,
+        baseFragmentsPerMatch: 3
+    },
+    
+    letterSystem: {
+        maxLettersPerStory: 10,
+        resonanceRequiredForHighlight: 5
+    },
+    
+    memoryGraph: {
+        nodeSize: 60,
+        connectionColor: '#b8860b',
+        eraColors: {
+            '1920s': '#8b4513',
+            '1930s': '#a0522d',
+            '1940s': '#cd853f',
+            '1950s': '#d2691e',
+            '1960s': '#daa520',
+            '1970s': '#b8860b',
+            '1980s': '#8b8000',
+            '1990s': '#556b2f',
+            '2000s': '#2f4f4f'
+        }
+    },
+    
     modes: {
         classic: {
             name: '经典三消',
@@ -32,6 +62,12 @@ const CONFIG = {
             matchType: 'logic',
             matchCount: 3,
             description: '找出逻辑上相关的物品组'
+        },
+        timeRewind: {
+            name: '时空回溯',
+            matchType: 'logical',
+            matchCount: 3,
+            description: '消耗能量回退时间，重新选择匹配'
         }
     },
     

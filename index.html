@@ -26,6 +26,17 @@
                     <span class="label">目标</span>
                     <span id="target" class="value">3/5</span>
                 </div>
+                <div class="stat">
+                    <span class="label">碎片</span>
+                    <span id="fragments-display" class="value">0</span>
+                </div>
+            </div>
+            <div id="energy-container" class="energy-container hidden">
+                <span class="energy-label">⚡ 能量</span>
+                <div class="energy-bar-container">
+                    <div id="energy-bar" class="energy-bar" style="width: 100%"></div>
+                </div>
+                <span id="energy-display" class="energy-value">100/100</span>
             </div>
         </header>
 
@@ -48,6 +59,11 @@
                             <span class="mode-name">记忆碎片</span>
                             <span class="mode-desc">将关联的碎片拼成完整记忆</span>
                         </button>
+                        <button class="mode-btn" data-mode="timeRewind">
+                            <span class="mode-icon">⏰</span>
+                            <span class="mode-name">时空回溯</span>
+                            <span class="mode-desc">消耗能量回退时间，重新选择匹配</span>
+                        </button>
                         <button class="mode-btn" data-mode="classic">
                             <span class="mode-icon">💎</span>
                             <span class="mode-name">经典三消</span>
@@ -59,6 +75,17 @@
                             <span class="mode-desc">找出逻辑上相关的物品组</span>
                         </button>
                     </div>
+                </div>
+
+                <div class="feature-buttons">
+                    <button id="letter-btn" class="feature-btn">
+                        <span class="feature-icon">✉️</span>
+                        <span class="feature-name">时光信箱</span>
+                    </button>
+                    <button id="graph-btn" class="feature-btn">
+                        <span class="feature-icon">🌳</span>
+                        <span class="feature-name">记忆图谱</span>
+                    </button>
                 </div>
 
                 <button id="start-btn" class="primary-btn">开始分拣</button>
@@ -105,6 +132,13 @@
                 <button id="pause-btn" class="control-btn" title="暂停">⏸️</button>
                 <button id="menu-btn" class="control-btn" title="菜单">🏠</button>
             </div>
+            
+            <div id="rewind-controls" class="rewind-controls hidden">
+                <div class="rewind-group">
+                    <input type="number" id="rewind-steps" class="rewind-steps" min="1" max="5" value="1" placeholder="步数">
+                    <button id="rewind-btn" class="rewind-btn" title="时空回溯">⏰ 时光倒流</button>
+                </div>
+            </div>
         </div>
 
         <div id="level-complete" class="screen hidden">
@@ -124,10 +158,68 @@
                         <span class="label">用时</span>
                         <span id="complete-time" class="value">2:34</span>
                     </div>
+                    <div class="complete-stat">
+                        <span class="label">时光碎片</span>
+                        <span id="complete-fragments" class="value">0</span>
+                    </div>
                 </div>
                 <div class="complete-buttons">
                     <button id="next-level-btn" class="primary-btn">下一关卡</button>
                     <button id="back-to-menu-btn" class="secondary-btn">返回菜单</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="letter-system" class="screen hidden">
+            <div class="letter-system-container">
+                <div class="letter-header">
+                    <h2 class="letter-title">✉️ 时光信箱</h2>
+                    <p class="letter-subtitle">写下寄往过去的信，与他人共鸣</p>
+                    <button class="close-letter-btn secondary-btn">返回</button>
+                </div>
+                
+                <div class="letter-content">
+                    <div class="write-letter-section">
+                        <h3>写一封信</h3>
+                        <div class="write-letter-form">
+                            <select class="story-select">
+                            </select>
+                            <textarea placeholder="写下你想对过去说的话...（至少10个字符）" rows="4"></textarea>
+                            <button class="submit-letter-btn primary-btn">寄出信件</button>
+                        </div>
+                    </div>
+                    
+                    <div class="browse-letters-section">
+                        <h3>浏览信件</h3>
+                        <div class="letters-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="memory-graph" class="screen hidden">
+            <div class="memory-graph-container">
+                <div class="graph-header">
+                    <h2 class="graph-title">🌳 记忆图谱 & 时空树</h2>
+                    <p class="graph-subtitle">探索记忆的脉络，解锁更多故事</p>
+                    <button class="close-graph-btn secondary-btn">返回</button>
+                </div>
+                
+                <div class="graph-content">
+                    <div class="graph-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot completed"></span>
+                            <span>已解锁</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot locked"></span>
+                            <span>未解锁</span>
+                        </div>
+                    </div>
+                    <div class="graph-canvas-container">
+                        <canvas id="graph-canvas"></canvas>
+                    </div>
                 </div>
             </div>
         </div>

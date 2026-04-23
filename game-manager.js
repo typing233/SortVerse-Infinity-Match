@@ -13,6 +13,7 @@ class GameManager {
         this.currentLevel = 1;
         this.score = 0;
         this.completedMemories = 0;
+        this.timeFragments = 0;
         this.startTime = 0;
         this.isPaused = false;
         this.isRunning = false;
@@ -21,6 +22,11 @@ class GameManager {
         this.gameLoopId = null;
         
         this.hintsRemaining = CONFIG.game.hintsAvailable;
+        
+        this.energy = CONFIG.timeRewind.maxEnergy;
+        this.history = [];
+        this.maxHistorySize = CONFIG.timeRewind.maxRewindSteps;
+        this.totalRewindSteps = 0;
         
         this.init();
     }
@@ -168,6 +174,9 @@ class GameManager {
         this.ui.on('onBackToMenu', () => this.backToMenu());
         this.ui.on('onNextLevel', () => this.nextLevel());
         this.ui.on('onStoryClose', () => this.resumeAfterStory());
+        this.ui.on('onTimeRewind', (steps) => this.performTimeRewind(steps));
+        this.ui.on('onOpenLetterSystem', () => this.openLetterSystem());
+        this.ui.on('onOpenMemoryGraph', () => this.openMemoryGraph());
     }
     
     startGame(mode) {
@@ -175,8 +184,12 @@ class GameManager {
         this.currentLevel = 1;
         this.score = 0;
         this.completedMemories = 0;
+        this.timeFragments = 0;
         this.startTime = Date.now();
         this.hintsRemaining = CONFIG.game.hintsAvailable;
+        this.energy = CONFIG.timeRewind.maxEnergy;
+        this.history = [];
+        this.totalRewindSteps = 0;
         
         this.matchSystem.setMode(mode);
         this.itemGenerator.setMode(mode);
@@ -201,6 +214,7 @@ class GameManager {
             this.physics.start();
             
             this.updateStatsUI();
+            this.updateEnergyUI();
             
             this.isRunning = true;
             this.isPaused = false;
@@ -348,7 +362,108 @@ class GameManager {
         }
     }
     
+    saveGameState() {
+        if (!this.physics) return;
+        
+        const bodies = this.physics.getAllBodies();
+        const state = {
+            timestamp: Date.now(),
+            score: this.score,
+            completedMemories: this.completedMemories,
+            timeFragments: this.timeFragments,
+            bodies: bodies.map(body => ({
+                id: body.id,
+                data: body.data,
+                position: { x: body.body.position.x, y: body.body.position.y },
+                angle: body.body.angle,
+                velocity: { x: body.body.velocity.x, y: body.body.velocity.y },
+                selected: body.selected
+            }))
+        };
+        
+        this.history.push(state);
+        if (this.history.length > this.maxHistorySize) {
+            this.history.shift();
+        }
+    }
+    
+    canRewind() {
+        return this.currentMode === 'timeRewind' && 
+               this.history.length > 0 && 
+               this.energy >= CONFIG.timeRewind.energyPerStep;
+    }
+    
+    performTimeRewind(steps = 1) {
+        if (!this.canRewind()) {
+            this.ui.showMessage('无法回退时间：能量不足或没有历史记录', 'error');
+            return false;
+        }
+        
+        const actualSteps = Math.min(steps, this.history.length, Math.floor(this.energy / CONFIG.timeRewind.energyPerStep));
+        if (actualSteps <= 0) return false;
+        
+        const energyCost = actualSteps * CONFIG.timeRewind.energyPerStep;
+        this.energy -= energyCost;
+        this.totalRewindSteps += actualSteps;
+        
+        for (let i = 0; i < actualSteps; i++) {
+            this.history.pop();
+        }
+        
+        const targetState = this.history[this.history.length - 1];
+        if (targetState) {
+            this.restoreState(targetState);
+        }
+        
+        this.updateEnergyUI();
+        this.updateStatsUI();
+        this.ui.showMessage(`时光倒流 ${actualSteps} 步！能量 -${energyCost}`, 'info');
+        
+        return true;
+    }
+    
+    restoreState(state) {
+        if (!this.physics) return;
+        
+        this.physics.clear();
+        this.score = state.score;
+        this.completedMemories = state.completedMemories;
+        this.timeFragments = state.timeFragments;
+        
+        state.bodies.forEach(bodyState => {
+            const bodyId = this.physics.createBodyAt(
+                bodyState.position.x,
+                bodyState.position.y,
+                CONFIG.game.itemSize,
+                bodyState.data
+            );
+            
+            const body = this.physics.getBodyById(bodyId);
+            if (body) {
+                Matter.Body.setAngle(body, bodyState.angle);
+                Matter.Body.setVelocity(body, bodyState.velocity);
+            }
+            
+            if (bodyState.selected) {
+                this.physics.selectBody(bodyId);
+            }
+        });
+        
+        this.updateSelectedUI();
+    }
+    
+    updateEnergyUI() {
+        if (this.ui) {
+            this.ui.toggleTimeRewindUI(this.currentMode === 'timeRewind');
+            if (this.currentMode === 'timeRewind') {
+                this.ui.updateEnergy(this.energy, CONFIG.timeRewind.maxEnergy);
+            }
+        }
+    }
+    
     processSuccessfulMatch(result) {
+        this.saveGameState();
+        
         this.isPaused = true;
         
         const items = result.matchedItems;
@@ -358,8 +473,21 @@ class GameManager {
         
         this.ui.showMatchEffect(centerX, centerY + 160, result.matchedItems[0]?.data?.color || CONFIG.colors.gold);
         
-        this.score += 100 * items.length;
+        const baseScore = 100 * items.length;
+        const rewindPenalty = this.totalRewindSteps * CONFIG.timeRewind.scorePenaltyPerStep;
+        const finalScore = Math.max(0, baseScore - rewindPenalty);
+        this.score += finalScore;
         this.completedMemories++;
+        
+        const baseFragments = CONFIG.timeRewind.baseFragmentsPerMatch;
+        const fragmentPenalty = this.totalRewindSteps * CONFIG.timeRewind.fragmentPenaltyPerStep;
+        const finalFragments = Math.max(0, baseFragments - fragmentPenalty);
+        this.timeFragments += finalFragments;
+        
+        if (this.currentMode === 'timeRewind') {
+            this.energy = Math.min(CONFIG.timeRewind.maxEnergy, this.energy + 15);
+            this.updateEnergyUI();
+        }
         
         items.forEach(item => {
             this.physics.removeBody(item.id);
@@ -369,7 +497,14 @@ class GameManager {
         this.updateSelectedUI();
         this.updateStatsUI();
         
-        this.ui.showMessage(`匹配成功！${result.name}`, 'success');
+        let message = `匹配成功！${result.name}`;
+        if (rewindPenalty > 0) {
+            message += ` (分数惩罚: -${rewindPenalty})`;
+        }
+        if (finalFragments < baseFragments) {
+            message += ` (碎片惩罚: ${baseFragments - finalFragments})`;
+        }
+        this.ui.showMessage(message, 'success');
         
         if (result.type === 'logical' && result.memorySet) {
             setTimeout(() => {
@@ -498,8 +633,22 @@ class GameManager {
         this.ui.showLevelComplete(
             this.completedMemories,
             this.score,
-            elapsedSeconds
+            elapsedSeconds,
+            this.timeFragments
         );
+    }
+    
+    openLetterSystem() {
+        if (this.ui) {
+            this.ui.showLetterSystem();
+        }
+    }
+    
+    openMemoryGraph() {
+        if (this.ui) {
+            const completedStories = this.storySystem.getCompletedStories();
+            this.ui.showMemoryGraph(completedStories);
+        }
     }
     
     nextLevel() {
