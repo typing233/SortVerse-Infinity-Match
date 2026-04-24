@@ -163,25 +163,32 @@ class UIManager {
             this.elements.memoryGraphScreen.classList.remove('active', 'hidden');
         }
         
+        const gameHeader = document.getElementById('game-header');
+        
         switch (screenName) {
             case 'menu':
                 this.elements.menuScreen.classList.add('active');
+                if (gameHeader) gameHeader.style.display = '';
                 break;
             case 'game':
                 this.elements.gameScreen.classList.add('active');
+                if (gameHeader) gameHeader.style.display = '';
                 break;
             case 'complete':
                 this.elements.levelCompleteScreen.classList.add('active');
+                if (gameHeader) gameHeader.style.display = '';
                 break;
             case 'letter':
                 if (this.elements.letterSystemScreen) {
                     this.elements.letterSystemScreen.classList.add('active');
                 }
+                if (gameHeader) gameHeader.style.display = 'none';
                 break;
             case 'graph':
                 if (this.elements.memoryGraphScreen) {
                     this.elements.memoryGraphScreen.classList.add('active');
                 }
+                if (gameHeader) gameHeader.style.display = 'none';
                 break;
         }
     }
@@ -360,6 +367,11 @@ class UIManager {
     }
     
     showLetterSystem(memorySetId = null) {
+        const gameHeader = document.getElementById('game-header');
+        if (gameHeader) {
+            gameHeader.style.display = 'none';
+        }
+        
         this.showScreen('letter');
         
         if (this.elements.letterSystemScreen) {
@@ -378,6 +390,10 @@ class UIManager {
         
         if (closeBtn) {
             closeBtn.onclick = () => {
+                const gameHeader = document.getElementById('game-header');
+                if (gameHeader) {
+                    gameHeader.style.display = '';
+                }
                 this.showScreen('menu');
             };
         }
@@ -494,6 +510,11 @@ class UIManager {
     }
     
     showMemoryGraph(completedStories = []) {
+        const gameHeader = document.getElementById('game-header');
+        if (gameHeader) {
+            gameHeader.style.display = 'none';
+        }
+        
         this.showScreen('graph');
         setTimeout(() => {
             this.renderMemoryGraph(completedStories);
@@ -507,6 +528,10 @@ class UIManager {
         const closeBtn = container.querySelector('.close-graph-btn');
         if (closeBtn) {
             closeBtn.onclick = () => {
+                const gameHeader = document.getElementById('game-header');
+                if (gameHeader) {
+                    gameHeader.style.display = '';
+                }
                 this.showScreen('menu');
             };
         }
